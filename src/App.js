@@ -1,40 +1,32 @@
 import './App.css';
-import React from 'react';
-
-const initialState = {
-  total_input:'',
-  current_input:'',
-  display: '0',
-};
+import { useState } from 'react';
 
 const operatorsRegex = /[-+*/]/;
 
-class Calculator extends React.Component{
-  constructor(props){
-    super(props);
-    this.state = initialState;
-    this.onClick = this.onClick.bind(this);
-  }
+function App() {
+  const [totalInput, setTotalInput] = useState('');
+  const [currentInput, setCurrentInput] = useState('');
+  const [display, setDisplay] = useState('0');
 
-  onClick(e){
-    const newChar = e.target.value;
-
+  function onClick(event){
+    const newChar = event.target.value;
     if(newChar==="AC"){
       
-      this.setState(()=>
-        {return initialState})
+      setTotalInput('');
+      setCurrentInput('');
+      setDisplay('0');
     
     }else if(newChar==="="){
       
-      if(this.state.total_input === '' || (this.state.total_input.match(operatorsRegex) && this.state.total_input.length === 1) || this.state.total_input.match("NaN")){
+      if(totalInput === '' || (totalInput.match(operatorsRegex) && totalInput.length === 1) || totalInput.match("NaN")){
         
-        this.setState(()=> {return {total_input:'NaN',
-          current_input:'',
-          display: 'NaN',}});
+        setTotalInput('NaN');
+        setCurrentInput('');
+        setDisplay('NaN');
 
       }else{
 
-        const formula = this.state.display.match(operatorsRegex) ? this.state.total_input.slice(0,-1) : this.state.total_input;
+        const formula = display.match(operatorsRegex) ? totalInput.slice(0,-1) : totalInput;
         const simplified_formula = formula.replaceAll("--","+").replaceAll("+-","-").replaceAll("*-","*(-)").replaceAll("/-","/(-)")
         
         const numbers_array = simplified_formula.split(operatorsRegex).filter(value => value !== "(").map(value=>{
@@ -50,10 +42,9 @@ class Calculator extends React.Component{
         let result = 0.0;
 
         if(numbers_array.length === 1 && 2 === operators_array.length){
-          this.setState(()=>{return {total_input: numbers_array[0],
-            current_input: '=',
-            display: numbers_array[0],
-          }});
+          setTotalInput(numbers_array[0]);
+          setCurrentInput('=');
+          setDisplay(numbers_array[0]);
           return;
           
         } else if(numbers_array.length === operators_array.length){
@@ -88,137 +79,121 @@ class Calculator extends React.Component{
           }
           iter+=1;
         });
-        this.setState((prevState)=>{return {total_input: prevState.total_input + newChar + result,
-          current_input: newChar,
-          display: result.toString(),
-        }})
+        
+        setTotalInput(totalInput + newChar + result);
+        setCurrentInput('=');
+        setDisplay(result.toString());
+        
       }
 
     }else if(newChar==="*" || newChar==="+" || newChar === "-" || newChar==="/"){
       
-      if(this.state.current_input === "="){
-        this.setState((prevState)=>
-          {return {total_input: prevState.display + newChar,
-          current_input:'',
-          display: newChar,
-        }})
+      if(currentInput === "="){
+
+        setTotalInput(display + newChar);
+        setCurrentInput('');
+        setDisplay(newChar);
         return;
+      
       }
 
-      if(this.state.display.match(operatorsRegex)){
+      if(display.match(operatorsRegex)){
         
-        if(newChar === '-' && this.state.display.length === 1){
+        if(newChar === '-' && display.length === 1){
 
-          this.setState((prevState)=>
-            {return {total_input: prevState.total_input + newChar,
-            current_input:'',
-            display: prevState.display+newChar,
-          }})
+          setTotalInput(totalInput + newChar);
+          setCurrentInput('');
+          setDisplay(display+newChar);
 
-        }else if(this.state.display.length === 2){
+        }else if(display.length === 2){
           
-          this.setState((prevState)=>
-            {return {total_input: prevState.total_input.slice(0,-2) + newChar,
-            current_input:'',
-            display: newChar,
-          }})
+          setTotalInput(totalInput.slice(0,-2) + newChar);
+          setCurrentInput('');
+          setDisplay(newChar);
         
         }else{
           
-          this.setState((prevState)=>
-            {return {total_input: prevState.total_input.slice(0,-1) + newChar,
-            current_input:'',
-            display: newChar,
-          }})
+          setTotalInput(totalInput.slice(0,-1) + newChar);
+          setCurrentInput('');
+          setDisplay(newChar);
         
         }
 
       }else{
 
-        this.setState((prevState)=>
-          {return {total_input: prevState.total_input + newChar,
-          current_input:'',
-          display: newChar,
-          }})
+        setTotalInput(totalInput + newChar);
+        setCurrentInput('');
+        setDisplay(newChar);
 
       }
 
     }
     else{
 
-      if((this.state.current_input === '' || this.state.current_input.match(operatorsRegex) || this.state.current_input === '=') && newChar === '.'){
+      if((currentInput === '' || currentInput.match(operatorsRegex) || currentInput === '=') && newChar === '.'){
+        
         const editedInput = "0"+newChar;
-        this.setState((prevState)=>
-          {return {total_input: prevState.total_input + editedInput,
-          current_input:'',
-          display: editedInput,
-        }})
+        setTotalInput(totalInput + editedInput);
+        setCurrentInput('');
+        setDisplay(editedInput);
         return;
+
       }
       
-      if(this.state.current_input === "="){
-        this.setState((prevState)=>
-          {return {total_input: newChar,
-          current_input:'',
-          display: newChar,
-        }})
+      if(currentInput === "="){
+
+        setTotalInput(newChar);
+        setCurrentInput('');
+        setDisplay(newChar);
+        return;
+
+      }
+
+      if((currentInput.indexOf('.')>-1 && newChar ==='.') || (newChar === '0' && currentInput==='')){
         return;
       }
 
-      this.setState((prevState)=>
-        {const prevStateNumber = prevState.current_input;
-          if((prevStateNumber.indexOf('.')>-1 && newChar ==='.') || (newChar === '0' && prevState.current_input==='')){
-            return prevState;
-          }else{
-            return {total_input: prevState.total_input + newChar,
-        current_input: prevState.current_input + newChar,
-        display: prevState.current_input + newChar,
-        }}})
+      setTotalInput(totalInput + newChar);
+      setCurrentInput(currentInput + newChar);
+      setDisplay(currentInput + newChar);
 
     }
   }
 
-  render(){
-    return <div id="calculator">
-        <div id="display" className="calculator-display">
-          <p id="display">{this.state.total_input}</p>
-          <p id="display">{this.state.display}</p>
+  return (
+    <div className="App">
+      <div id="calculator">
+        <div id="display-div" className="calculator-display">
+          <p id="display-input">{totalInput}</p>
+          <p id="display">{display}</p>
         </div>
         <div id="buttons" className="calculator-buttons">
           
-          <button className = "calculator-button ac" onClick={this.onClick} value="AC" id="clear">AC</button>
+          <button className = "calculator-button ac" onClick={onClick} value="AC" id="clear">AC</button>
 
-          <button className = "calculator-button divide operations" onClick={this.onClick} value="/" id="divide">/</button>
-          <button className = "calculator-button multiply operations" onClick={this.onClick} value="*" id="multiply">x</button>
+          <button className = "calculator-button divide operations" onClick={onClick} value="/" id="divide">/</button>
+          <button className = "calculator-button multiply operations" onClick={onClick} value="*" id="multiply">x</button>
 
-          <button className = "calculator-button seven" onClick={this.onClick} value="7" id="seven">7</button>
-          <button className = "calculator-button eight" onClick={this.onClick} value="8" id="eight">8</button>
-          <button className = "calculator-button nine" onClick={this.onClick} value="9" id="nine">9</button>
-          <button className = "calculator-button subtract operations" onClick={this.onClick} value="-" id="subtract">-</button>
+          <button className = "calculator-button seven" onClick={onClick} value="7" id="seven">7</button>
+          <button className = "calculator-button eight" onClick={onClick} value="8" id="eight">8</button>
+          <button className = "calculator-button nine" onClick={onClick} value="9" id="nine">9</button>
+          <button className = "calculator-button subtract operations" onClick={onClick} value="-" id="subtract">-</button>
           
-          <button className = "calculator-button four" onClick={this.onClick} value="4" id="four">4</button>
-          <button className = "calculator-button five" onClick={this.onClick} value="5" id="five">5</button>
-          <button className = "calculator-button six" onClick={this.onClick} value="6" id="six">6</button>
-          <button className = "calculator-button add operations" onClick={this.onClick} value="+" id="add">+</button>
+          <button className = "calculator-button four" onClick={onClick} value="4" id="four">4</button>
+          <button className = "calculator-button five" onClick={onClick} value="5" id="five">5</button>
+          <button className = "calculator-button six" onClick={onClick} value="6" id="six">6</button>
+          <button className = "calculator-button add operations" onClick={onClick} value="+" id="add">+</button>
           
-          <button className = "calculator-button one" onClick={this.onClick} value="1" id="one">1</button>
-          <button className = "calculator-button two" onClick={this.onClick} value="2" id="two">2</button>
-          <button className = "calculator-button three" onClick={this.onClick} value="3" id="three">3</button>
+          <button className = "calculator-button one" onClick={onClick} value="1" id="one">1</button>
+          <button className = "calculator-button two" onClick={onClick} value="2" id="two">2</button>
+          <button className = "calculator-button three" onClick={onClick} value="3" id="three">3</button>
 
-          <button className = "calculator-button equals" onClick={this.onClick} value="=" id="equals">=</button>
+          <button className = "calculator-button equals" onClick={onClick} value="=" id="equals">=</button>
           
-          <button className = "calculator-button decimal" onClick={this.onClick} value="." id="decimal">.</button>
-          <button className = "calculator-button zero" onClick={this.onClick} value="0" id="zero">0</button>
+          <button className = "calculator-button decimal" onClick={onClick} value="." id="decimal">.</button>
+          <button className = "calculator-button zero" onClick={onClick} value="0" id="zero">0</button>
         </div>
       </div>
-    
-  }
-}
-
-function App() {
-  return (
-    <div className="App">
-      <Calculator />
     </div>
   );
 }
